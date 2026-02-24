@@ -69,35 +69,39 @@ try:
                 
                 raw_text = response.text
 
-                # --- 6. EXIBIÇÃO NA TELA (Design Premium - Hierarquia Corrigida) ---
+                # --- 6. EXIBIÇÃO NA TELA (Design de Alta Visibilidade) ---
                 st.markdown("---")
                 
                 raw_text = response.text
                 
-                # 1. Títulos Principais (Ex: 1. Machinery) -> VERMELHO ROBOTMASTER (#D32F2F) e MAIOR (28px)
+                # 1. Títulos Principais -> VERMELHO (#D32F2F), FONTE 32px e CAIXA ALTA
+                # Usamos <h2> para garantir que seja maior que qualquer outro texto
                 processed_html = re.sub(
                     r'^(\d+\..*?)$', 
-                    r'<h2 style="color:#D32F2F; font-size:28px; margin-top:35px; margin-bottom:10px; border-bottom: 2px solid #f0f0f0; font-weight: bold; text-transform: uppercase;">\1</h2>', 
+                    r'<h2 style="color:#D32F2F; font-size:32px; margin-top:40px; margin-bottom:15px; border-bottom: 3px solid #D32F2F; font-weight: 900; text-transform: uppercase; font-family: sans-serif;">\1</h2>', 
                     raw_text, flags=re.MULTILINE
                 )
                 
-                # 2. Subtítulos (Texto entre **) -> AZUL ROBOTMASTER (#005a9c) e MENOR (18px)
+                # 2. Subtítulos (Texto entre **) -> AZUL ROBOTMASTER (#005a9c) e TAMANHO 20px
                 processed_html = re.sub(
                     r'\*\*(.*?)\*\*', 
-                    r'<b style="color:#005a9c; font-size:18px; font-weight: bold;">\1</b>', 
+                    r'<b style="color:#005a9c; font-size:20px; font-weight: bold;">\1</b>', 
                     processed_html
                 )
 
                 processed_html = processed_html.replace('\n', '<br>')
 
+                # Container de Exibição
                 st.markdown(f"""
-                <div style="background-color: #ffffff; padding: 45px; border-radius: 15px; border: 1px solid #d1d1d1; box-shadow: 0px 10px 40px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; color: #333333; line-height: 1.8;">
-                    <div style="text-align: right; color: #ccc; font-size: 11px; font-weight: bold; letter-spacing: 2px;">OFFICIAL ENGINEERING AUDIT</div>
-                    <div style="font-size: 16px;">{processed_html}</div>
+                <div style="background-color: #ffffff; padding: 50px; border-radius: 20px; border: 1px solid #e0e0e0; box-shadow: 0px 15px 50px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial, sans-serif; color: #222222; line-height: 1.8;">
+                    <div style="text-align: right; color: #bbbbbb; font-size: 12px; font-weight: bold; letter-spacing: 3px; margin-bottom: 20px;">OFFICIAL ENGINEERING AUDIT</div>
+                    <div style="font-size: 18px;">
+                        {processed_html}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-                # --- 7. FUNÇÃO GERADORA DE PDF ---
+                # --- 7. FUNÇÃO GERADORA DE PDF (Sincronizada) ---
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
@@ -122,24 +126,27 @@ try:
                         if not line:
                             pdf.ln(4); continue
                         if re.match(r'^(\d+\.|###)', line):
-                            pdf.set_font("Arial", 'B', 14); pdf.set_text_color(*rm_red)
+                            pdf.set_font("Arial", 'B', 15); pdf.set_text_color(*rm_red)
                             pdf.multi_cell(0, 10, line.encode('latin-1', 'replace').decode('latin-1'))
                         elif is_sub:
-                            pdf.set_font("Arial", 'B', 11); pdf.set_text_color(*rm_blue)
+                            pdf.set_font("Arial", 'B', 12); pdf.set_text_color(*rm_blue)
                             pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
                         else:
                             pdf.set_font("Arial", size=11); pdf.set_text_color(40, 40, 40)
                             pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
                     return pdf.output(dest='S').encode('latin-1')
 
-                # --- 8. BOTÕES (CORREÇÃO DE DOWNLOAD ERROR) ---
+                # --- 8. BOTÕES (Correção Definitiva de Duplicação) ---
                 st.markdown("<br>", unsafe_allow_html=True)
+                # O segredo é usar um ID único que muda a cada execução para limpar o cache do widget
+                import time
+                unique_id = str(int(time.time()))
+                
                 col_down1, col_down2, col_down3 = st.columns(3)
 
                 with col_down1:
                     pdf_bytes = create_pdf(raw_text)
-                    # Adicionado 'key' único para evitar Duplicate Widget ID
-                    st.download_button("📄 PDF Report", pdf_bytes, "Robotmaster_Audit.pdf", "application/pdf", use_container_width=True, key="btn_pdf_final")
+                    st.download_button("📄 PDF Report", pdf_bytes, "Robotmaster_Audit.pdf", "application/pdf", use_container_width=True, key=f"pdf_{unique_id}")
 
                 with col_down2:
                     doc = Document()
@@ -147,106 +154,10 @@ try:
                     doc.add_paragraph(raw_text)
                     target = BytesIO()
                     doc.save(target)
-                    # Adicionado 'key' único
-                    st.download_button("📝 Word Doc", target.getvalue(), "Robotmaster_Audit.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True, key="btn_word_final")
+                    st.download_button("📝 Word Doc", target.getvalue(), "Robotmaster_Audit.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True, key=f"word_{unique_id}")
 
                 with col_down3:
                     email_receiver, email_subject = "sales@robotmaster.com", "Robotmaster V7 Audit Report"
                     short_body = "The Robotmaster V7 OLP Audit is ready. Please check the generated report."
                     mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={short_body}"
-                    st.markdown(f'<a href="{mailto_link}" style="text-decoration:none;"><div style="background-color:#D32F2F; color:white; padding:10px; text-align:center; border-radius:5px; font-weight:bold; height:38px; line-height:18px;">📧 Email Report</div></a>', unsafe_allow_html=True)
-
-                # --- 8. EXPORTAÇÃO E BOTÃO DE E-MAIL LIMPO ---
-                st.markdown("<br>", unsafe_allow_html=True)
-                col_down1, col_down2, col_down3 = st.columns(3)
-
-                with col_down1:
-                    pdf_bytes = create_pdf(raw_text)
-                    st.download_button("📄 PDF Report", pdf_bytes, "Robotmaster_Audit.pdf", "application/pdf", use_container_width=True)
-
-                with col_down2:
-                    doc = Document()
-                    doc.add_heading('Robotmaster V7 Audit', 0)
-                    doc.add_paragraph(raw_text)
-                    target = BytesIO()
-                    doc.save(target)
-                    st.download_button("📝 Word Doc", target.getvalue(), "Robotmaster_Audit.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
-
-                with col_down3:
-                    # Geramos o link mailto de forma limpa
-                    email_receiver = "sales@robotmaster.com"
-                    email_subject = "Robotmaster V7 Audit Report"
-                    # Limitamos o corpo do e-mail para não sobrecarregar o link
-                    short_body = "Hello, please find the Robotmaster V7 Audit attached or generated in the app."
-                    mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={short_body}"
-                    
-                    st.markdown(f'''
-                        <a href="{mailto_link}" style="text-decoration:none;">
-                            <div style="background-color:#D32F2F; color:white; padding:10px; text-align:center; border-radius:5px; font-weight:bold; height:38px; line-height:18px;">
-                                📧 Email Report
-                            </div>
-                        </a>
-                    ''', unsafe_allow_html=True)
-
-                # --- 7. FUNÇÃO GERADORA DE PDF ---
-                def create_pdf(text):
-                    pdf = FPDF()
-                    pdf.add_page()
-                    rm_blue = (0, 90, 156)
-                    try:
-                        pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 33)
-                    except:
-                        pass
-                    pdf.set_font("Arial", 'B', 16)
-                    pdf.set_text_color(*rm_blue)
-                    pdf.cell(0, 10, "Engineering & Integration Report", ln=True, align='R')
-                    pdf.line(10, 35, 200, 35)
-                    pdf.ln(15)
-
-                    chars_to_replace = {'\u2022': '-', '\u2013': '-', '\u201c': '"', '\u201d': '"'}
-                    for line in text.split('\n'):
-                        line = line.strip()
-                        for char, rep in chars_to_replace.items():
-                            line = line.replace(char, rep)
-                        line = line.replace('**', '')
-                        if not line:
-                            pdf.ln(4)
-                            continue
-                        if re.match(r'^(\d+\.|###)', line):
-                            pdf.set_font("Arial", 'B', 12)
-                            pdf.set_text_color(*rm_blue)
-                            pdf.multi_cell(0, 8, line.encode('latin-1', 'replace').decode('latin-1'))
-                        else:
-                            pdf.set_font("Arial", size=11)
-                            pdf.set_text_color(40, 40, 40)
-                            pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
-                    return pdf.output(dest='S').encode('latin-1')
-
-                # --- 8. EXPORTAÇÃO E ENVIO ---
-                st.markdown("<br>", unsafe_allow_html=True)
-                col_down1, col_down2, col_down3 = st.columns(3)
-
-                with col_down1:
-                    pdf_bytes = create_pdf(raw_text)
-                    st.download_button("📄 PDF Report", pdf_bytes, "Robotmaster_Audit.pdf", "application/pdf", use_container_width=True)
-
-                with col_down2:
-                    doc = Document()
-                    doc.add_heading('Robotmaster V7 Audit', 0)
-                    doc.add_paragraph(raw_text)
-                    target = BytesIO()
-                    doc.save(target)
-                    st.download_button("📝 Word Doc", target.getvalue(), "Robotmaster_Audit.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
-
-                with col_down3:
-                    email_receiver = "sales@robotmaster.com"
-                    email_subject = "Robotmaster V7 Audit Report"
-                    email_body = raw_text.replace('\n', '%0D%0A')
-                    mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={email_body}"
-                    st.markdown(f'<a href="{mailto_link}" style="text-decoration:none;"><div style="background-color:#005a9c;color:white;padding:10px;text-align:center;border-radius:5px;font-weight:bold;height:38px;line-height:18px;">📧 Email</div></a>', unsafe_allow_html=True)
-
-            except Exception as e:
-                st.error(f"AI Error: {e}")
-
-except Exception as e:
-    st.error(f"File Error: {e}")
+                    st.markdown(f'''<a href="{mailto_link}" style="text-decoration:none;"><div style="background-color:#D32F2F; color:white; padding:10px; text-align:center; border-radius:5px; font-weight:bold; height:38px; line-height:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;">📧 Email Report</div></a>''', unsafe_allow_html=True)
