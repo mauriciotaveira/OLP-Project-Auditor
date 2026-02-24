@@ -15,10 +15,19 @@ st.markdown("<h2 style='text-align: center; color: #D32F2F;'>OLP Project Auditor
 st.markdown("<p style='text-align: center; color: #555555;'>Upload the client's technical scope (PDF) for instant feasibility analysis and V7 licensing recommendations.</p>", unsafe_allow_html=True)
 st.write("---")
 
-# --- API KEY SETUP (Híbrido: Manual ou Automático via Secrets) ---
-api_key_secret = st.secrets.get("GEMINI_API_KEY", "")
-api_key = st.text_input("Gemini API Key:", value=api_key_secret, type="password")
-if api_key:
+# --- API KEY SETUP (Invisível para o Usuário) ---
+api_key = st.secrets.get("GEMINI_API_KEY", "")
+
+if not api_key:
+    st.error("⚠️ Configuração de API não encontrada nos Secrets do Streamlit.")
+    st.stop()
+
+# --- INTERFACE DE NEGÓCIO (O que o cliente vê) ---
+st.write("### 📝 Auditoria de Projeto OLP")
+uploaded_file = st.file_uploader("Arraste aqui o Escopo / RFP do Cliente (PDF)", type="pdf")
+
+if uploaded_file:
+    # O restante do seu código de análise continua aqui...
     # --- FILE UPLOADER ---
     uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
     
