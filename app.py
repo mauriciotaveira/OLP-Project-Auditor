@@ -39,9 +39,16 @@ else:
             for page in pdf_reader.pages:
                 pdf_text += page.extract_text()
             
-            st.success("Document read successfully!")
-            
-            if st.button("Analyze Project & Generate Proposal"):
+            if uploaded_file is not None:
+        with st.spinner("Extracting technical data..."):
+            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+            pdf_text = ""
+            for page in pdf_reader.pages:
+                pdf_text += page.extract_text()
+                
+        st.success("Document read successfully!")
+        
+        if st.button("Analyze Project & Generate Proposal"):
             with st.spinner("AI Engineering Team is analyzing the scope..."):
                 try:
                     # --- Motor 2026 (Versão 2.5 Flash) ---
