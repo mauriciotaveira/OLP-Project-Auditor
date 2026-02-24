@@ -67,9 +67,36 @@ try:
                     contents=prompt,
                 )
                 
+                # --- 6. EXIBIÇÃO DO RELATÓRIO (Design Premium) ---
                 st.markdown("---")
                 st.markdown("### 📊 Engineering & Integration Report")
-                st.write(response.text)
+                
+                # Container elegante: Fundo branco, texto grafite, sem azul.
+                report_html = f"""
+                <div style="
+                    background-color: #ffffff; 
+                    padding: 30px; 
+                    border-radius: 12px; 
+                    border: 1px solid #d1d1d1; 
+                    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+                    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+                    color: #1a1a1a;
+                    line-height: 1.6;
+                    font-size: 16px;
+                ">
+                    {response.text.replace('\n', '<br>')}
+                </div>
+                """
+                st.markdown(report_html, unsafe_allow_html=True)
+                
+                # Espaço e botão de download
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.download_button(
+                    label="📥 Download Technical Report",
+                    data=response.text,
+                    file_name="Robotmaster_Audit_Report.txt",
+                    mime="text/plain"
+                )
                 
             except Exception as e:
                 if "429" in str(e):
