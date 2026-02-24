@@ -30,18 +30,14 @@ if not api_key:
     st.stop()
 
 # --- 2. CLEAN INTERFACE (No Redundancy) ---
-# Adiciona apenas um espaço e o campo de upload
 st.markdown("<br>", unsafe_allow_html=True) 
 
+# APENAS UM CAMPO DE UPLOAD ABAIXO:
 uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
 
 if not uploaded_file:
     st.info("💡 Please upload the technical scope to start the analysis.")
     st.stop()
-
-# Campo único de upload - sem caixas extras
-uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
-
 if not uploaded_file:
     st.info("💡 Please upload a PDF file to start the audit.")
     st.stop() # Isso "limpa" o resto da tela até que o arquivo seja enviado
