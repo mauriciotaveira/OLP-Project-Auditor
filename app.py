@@ -144,7 +144,13 @@ try:
                 with col_down1:
                     try:
                         pdf_bytes = create_pdf(raw_text)
-                        st.download_button("📄 Download PDF Report", pdf_bytes, "Robotmaster_V7_Report.pdf", "application/pdf", use_container_width=True)
+                        st.download_button(
+                            label="📄 Download PDF Report",
+                            data=pdf_bytes,
+                            file_name="Robotmaster_V7_Report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
                     except Exception as e:
                         st.error(f"PDF Error: {e}")
 
@@ -155,4 +161,18 @@ try:
                         doc.add_paragraph(raw_text)
                         target = BytesIO()
                         doc.save(target)
-                        st.download_button("📝 Download Word Doc", target.getvalue(), "Robotmaster
+                        st.download_button(
+                            label="📝 Download Word Doc",
+                            data=target.getvalue(),
+                            file_name="Robotmaster_V7_Report.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"Word Error: {e}")
+
+            except Exception as e:
+                st.error(f"AI Error: {e}")
+
+except Exception as e:
+    st.error(f"File Error: {e}")
