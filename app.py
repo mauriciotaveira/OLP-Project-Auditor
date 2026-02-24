@@ -261,3 +261,30 @@ try:
 
 except Exception as e:
     st.error(f"File Error: {e}")
+    # --- 9. ENVIO RÁPIDO (E-mail) ---
+                st.markdown("---")
+                st.markdown("### ✉️ Quick Send")
+                
+                # Criar o link do e-mail com o corpo do relatório
+                email_receiver = "vendas@robotmaster.com" # Você pode mudar para o e-mail do cliente
+                email_subject = "Robotmaster V7 Audit - Engineering Report"
+                # Limpa o texto para o link do e-mail não quebrar
+                email_body = raw_text.replace('\n', '%0D%0A') 
+                
+                mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={email_body}"
+
+                st.markdown(f"""
+                    <a href="{mailto_link}" style="text-decoration: none;">
+                        <div style="
+                            background-color: #005a9c; 
+                            color: white; 
+                            padding: 15px; 
+                            text-align: center; 
+                            border-radius: 10px; 
+                            font-weight: bold;
+                            cursor: pointer;
+                        ">
+                            📧 Open in Outlook / Mail
+                        </div>
+                    </a>
+                """, unsafe_allow_html=True)
