@@ -1,0 +1,18 @@
+[theme]
+# Força o fundo claro (Adeus, clima Noir!)
+base="light"
+
+# A cor principal dos botões e destaques (Vermelho Robotmaster)
+primaryColor="#D32F2F" 
+
+# A cor do fundo da tela (Branco puro)
+backgroundColor="#FFFFFF" 
+
+# A cor de fundo secundária (um cinza muito suave para as caixas de upload)
+secondaryBackgroundColor="#F4F6F9" 
+
+# A cor dos textos (Azul Escuro Corporativo, muito mais elegante que preto)
+textColor="#0055FF" 
+
+# A fonte do aplicativo (Sem serifa, moderna)
+font="sans serif"

@@ -1,0 +1,15 @@
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignorar pastas de ambiente virtual (caso você crie uma)
+venv/
+env/
+.env
+
+# Ignorar arquivos do sistema Mac
+.DS_Store
+
+# Ignorar pastas de cache do Streamlit
+.streamlit/static/
