@@ -58,21 +58,17 @@ else:
                         Respond strictly in English, using professional industrial robotics terminology.
                         """
                         
-                        # Motor (google-genai)
-                        client = genai.Client(api_key=api_key)
-                        
-                        prompt = f"{system_instruction}\n\nHere is the client's document:\n{pdf_text}"
-                        
-                        response = client.models.generate_content(
-                            model='gemini-2.0-flash', # Ajustado para o modelo estável atual
-                            contents=prompt,
-                        )
-                        
-                        st.markdown("---")
-                        st.markdown("### 📊 Engineering & Integration Report")
-                        st.write(response.text)
-                        
-                    except Exception as e:
-                        st.error(f"AI Analysis Error: {e}")
-        except Exception as e:
-            st.error(f"Error reading PDF: {e}")
+                        # Motor 2026 (google-genai) - Versão 2.5 Flash
+                    client = genai.Client(api_key=api_key)
+                    
+                    prompt = f"{system_instruction}\n\nHere is the client's document:\n{pdf_text}"
+                    
+                    # Chamada oficial para o modelo 2.5
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=prompt,
+                    )
+                    
+                    st.markdown("---")
+                    st.markdown("### 📊 Engineering & Integration Report")
+                    st.write(response.text)
