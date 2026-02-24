@@ -54,64 +54,97 @@ try:
             
             raw_text = response.text
 
-            # --- 6. EXIBIÇÃO NA TELA (Design Premium Corrigido) ---
-            st.markdown("---")
-            
-            # Títulos em Vermelho Robotmaster (32px)
-            processed_html = re.sub(
-                r'^(\d+\..*?)$', 
-                r'<h2 style="color:#D32F2F; font-size:32px; margin-top:40px; border-bottom: 3px solid #D32F2F; font-weight: 900; text-transform: uppercase;">\1</h2>', 
-                raw_text, flags=re.MULTILINE
-            )
-            
-            # Subtítulos em Azul Robotmaster (20px)
-            processed_html = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#005a9c; font-size:20px;">\1</b>', processed_html)
-            processed_html = processed_html.replace('\n', '<br>')
-
-            st.markdown(f"""
-            <div style="background-color: white; padding: 40px; border-radius: 15px; border: 1px solid #ddd; box-shadow: 0px 10px 30px rgba(0,0,0,0.1); color: #222;">
-                <div style="text-align: right; color: #ccc; font-size: 10px; font-weight: bold;">OFFICIAL AUDIT</div>
-                {processed_html}
-            </div>
-            """, unsafe_allow_html=True)
-
-            # --- 7. FUNÇÃO PDF ---
-            def create_pdf(text):
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.set_font("Arial", 'B', 16)
-                pdf.set_text_color(211, 47, 47) # Vermelho
-                pdf.cell(0, 10, "Engineering Report", ln=True, align='R')
-                pdf.ln(10)
+            # --- 6. EXIBIÇÃO NA TELA (Design Premium Vermelho Robotmaster) ---
+                st.markdown("---")
+                raw_text = response.text
                 
-                for line in text.split('\n'):
-                    line = line.replace('**', '').strip()
-                    if not line: continue
-                    if re.match(r'^\d+\.', line):
-                        pdf.set_font("Arial", 'B', 14)
+                # Títulos em Vermelho Robotmaster (32px)
+                processed_html = re.sub(
+                    r'^(\d+\..*?)$', 
+                    r'<h2 style="color:#D32F2F; font-size:32px; margin-top:40px; border-bottom: 3px solid #D32F2F; font-weight: 900; text-transform: uppercase;">\1</h2>', 
+                    raw_text, flags=re.MULTILINE
+                )
+                
+                # Subtítulos em Azul Robotmaster (20px)
+                processed_html = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#005a9c; font-size:20px;">\1</b>', processed_html)
+                processed_html = processed_html.replace('\n', '<br>')
+
+                st.markdown(f"""
+                <div style="background-color: white; padding: 40px; border-radius: 15px; border: 1px solid #ddd; box-shadow: 0px 10px 30px rgba(0,0,0,0.1); color: #222;">
+                    <div style="text-align: right; color: #ccc; font-size: 10px; font-weight: bold; letter-spacing: 2px;">OFFICIAL ENGINEERING AUDIT</div>
+                    {processed_html}
+                </div>
+                """, unsafe_allow_html=True)
+
+                # --- 7. FUNÇÃO GERADORA DE PDF (Com Logótipo e Cores) ---
+                def create_pdf(text):
+                    pdf = FPDF()
+                    pdf.add_page()
+                    
+                    # Tentar inserir o logótipo (ajuste o nome do ficheiro se necessário)
+                    try:
+                        pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 45)
+                    except:
+                        pdf.set_font("Arial", 'B', 12)
                         pdf.set_text_color(211, 47, 47)
-                    else:
-                        pdf.set_font("Arial", size=11)
-                        pdf.set_text_color(40, 40, 40)
-                    pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
-                return pdf.output(dest='S').encode('latin-1')
+                        pdf.cell(0, 10, "ROBOTMASTER", ln=True)
 
-            # --- 8. BOTÕES (Sem Erro de Duplicação) ---
-            st.markdown("<br>", unsafe_allow_html=True)
-            u_id = str(int(time.time()))
-            c1, c2, c3 = st.columns(3)
+                    pdf.set_font("Arial", 'B', 16)
+                    pdf.set_text_color(211, 47, 47) # Vermelho
+                    pdf.cell(0, 10, "Engineering & Integration Report", ln=True, align='R')
+                    pdf.line(10, 35, 200, 35)
+                    pdf.ln(15)
 
-            with c1:
-                st.download_button("📄 PDF Report", create_pdf(raw_text), f"Audit_{u_id}.pdf", key=f"pdf_{u_id}", use_container_width=True)
-            with c2:
-                doc = Document()
-                doc.add_paragraph(raw_text)
-                target = BytesIO()
-                doc.save(target)
-                st.download_button("📝 Word Doc", target.getvalue(), f"Audit_{u_id}.docx", key=f"word_{u_id}", use_container_width=True)
-            with c3:
-                mailto = f"mailto:sales@robotmaster.com?subject=Audit&body=Report ready."
-                st.markdown(f'<a href="{mailto}" style="text-decoration:none;"><div style="background-color:#D32F2F; color:white; padding:10px; text-align:center; border-radius:5px; font-weight:bold;">📧 Email</div></a>', unsafe_allow_html=True)
+                    for line in text.split('\n'):
+                        line = line.strip()
+                        is_bold = '**' in line
+                        clean_line = line.replace('**', '')
+                        
+                        if not clean_line:
+                            pdf.ln(4)
+                            continue
+                        
+                        if re.match(r'^\d+\.', clean_line):
+                            pdf.set_font("Arial", 'B', 14)
+                            pdf.set_text_color(211, 47, 47) # Título Vermelho
+                            pdf.multi_cell(0, 10, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+                        elif is_bold:
+                            pdf.set_font("Arial", 'B', 11)
+                            pdf.set_text_color(0, 90, 156) # Subtítulo Azul
+                            pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+                        else:
+                            pdf.set_font("Arial", size=11)
+                            pdf.set_text_color(40, 40, 40)
+                            pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+                    return pdf.output(dest='S').encode('latin-1')
 
-except Exception as e:
-    st.error(f"Error: {e}")
+                # --- 8. BOTÕES DE EXPORTAÇÃO ALINHADOS ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                u_id = str(int(time.time()))
+                col_down1, col_down2, col_down3 = st.columns(3)
+
+                with col_down1:
+                    st.download_button(
+                        "📄 PDF Report", 
+                        create_pdf(raw_text), 
+                        f"Audit_{u_id}.pdf", 
+                        key=f"pdf_{u_id}", 
+                        use_container_width=True
+                    )
+                with col_down2:
+                    doc = Document()
+                    doc.add_heading('Robotmaster V7 Audit', 0)
+                    doc.add_paragraph(raw_text)
+                    target = BytesIO()
+                    doc.save(target)
+                    st.download_button(
+                        "📝 Word Doc", 
+                        target.getvalue(), 
+                        f"Audit_{u_id}.docx", 
+                        key=f"word_{u_id}", 
+                        use_container_width=True
+                    )
+                with col_down3:
+                    # Link Mailto simplificado e alinhado
+                    mailto = "mailto:sales@robotmaster.com?subject=Robotmaster%20Audit&body=Attached%20is%20the%20report."
+                    st.link_button("📧 Email Report", mailto, use_container_width=True)
