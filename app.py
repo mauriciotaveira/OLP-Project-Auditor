@@ -87,22 +87,42 @@ try:
                     {response.text.replace('\n', '<br>')}
                 </div>
                 """
+                # --- 6. EXIBIÇÃO DO RELATÓRIO (Design Premium & Legibilidade) ---
+                st.markdown("---")
+                
+                # Tratamento do texto para remover excesso de asteriscos e formatar seções
+                import re
+                processed_text = response.text
+                processed_text = processed_text.replace('---', '<hr style="border:0; height:1px; background:#e0e0e0; margin:20px 0;">')
+                processed_text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#D32F2F; font-size:18px;">\1</b>', processed_text) # Títulos em Vermelho Robotmaster
+                processed_text = processed_text.replace('* ', '• ') # Bullet points mais limpos
+                processed_text = processed_text.replace('\n', '<br>')
+
+                report_html = f"""
+                <div style="
+                    background-color: #ffffff; 
+                    padding: 40px; 
+                    border-radius: 15px; 
+                    border: 1px solid #d1d1d1; 
+                    box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    color: #333333;
+                    line-height: 1.8;
+                    font-size: 17px;
+                    max-width: 900px;
+                    margin: auto;
+                ">
+                    <div style="text-align: right; color: #999; font-size: 12px;">OFFICIAL TECHNICAL REPORT V7</div>
+                    <br>
+                    {processed_text}
+                </div>
+                """
                 st.markdown(report_html, unsafe_allow_html=True)
                 
-                # Espaço e botão de download
                 st.markdown("<br>", unsafe_allow_html=True)
                 st.download_button(
-                    label="📥 Download Technical Report",
+                    label="📥 Download Official Proposal (.txt)",
                     data=response.text,
-                    file_name="Robotmaster_Audit_Report.txt",
+                    file_name="Robotmaster_V7_Proposal.txt",
                     mime="text/plain"
                 )
-                
-            except Exception as e:
-                if "429" in str(e):
-                    st.warning("🚀 Model is warming up. Please wait 30 seconds and click again.")
-                else:
-                    st.error(f"AI Error: {e}")
-
-except Exception as e:
-    st.error(f"File Error: {e}")
