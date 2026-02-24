@@ -109,14 +109,61 @@ try:
                 # Prepara os containers de download
                 col_down1, col_down2 = st.columns(2)
 
-                # --- Gerador de PDF ---
+                # --- Gerador de PDF "Designer" (Azul Robotmaster & Títulos Destacados) ---
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
+                    
+                    # Definição do Azul Robotmaster Oficial
+                    rm_blue = (0, 90, 156) 
+                    
+                    # 1. CABEÇALHO COM LOGO E TÍTULO
+                    try:
+                        # Tenta colocar o logo no canto superior esquerdo
+                        pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 33)
+                    except:
+                        pass # Se o arquivo não existir no GitHub, ele segue sem o logo
+                    
+                    pdf.set_font("Arial", 'B', 16)
+                    pdf.set_text_color(*rm_blue)
+                    pdf.cell(0, 10, "Engineering & Integration Report", ln=True, align='R')
+                    
+                    pdf.set_font("Arial", 'I', 10)
+                    pdf.set_text_color(120, 120, 120)
+                    pdf.cell(0, 8, "Robotmaster V7 OLP Audit", ln=True, align='R')
+                    
+                    # Linha Azul Decorativa
+                    pdf.set_draw_color(*rm_blue)
+                    pdf.line(10, 35, 200, 35)
+                    pdf.ln(15)
+
+                    # 2. PROCESSAMENTO DO TEXTO
                     pdf.set_font("Arial", size=11)
-                    # Limpeza de caracteres para evitar erro de codificação no FPDF 1.7
-                    clean_text = text.replace('\u2022', '*').replace('\u2013', '-').replace('\u201d', '"').replace('\u201c', '"')
-                    pdf.multi_cell(0, 10, clean_text.encode('latin-1', 'replace').decode('latin-1'))
+                    pdf.set_text_color(40, 40, 40) # Cinza escuro profissional
+
+                    for line in text.split('\n'):
+                        line = line.strip()
+                        if not line:
+                            pdf.ln(4)
+                            continue
+                        
+                        # LOGICA DE TÍTULOS: Se a linha começar com "1.", "2." ou "###"
+                        if re.match(r'^(\d+\.|###)', line):
+                            pdf.ln(4)
+                            pdf.set_font("Arial", 'B', 14)
+                            pdf.set_text_color(*rm_blue)
+                            # Limpa os símbolos de Markdown para o PDF ficar limpo
+                            clean_title = line.replace('###', '').replace('**', '').strip()
+                            pdf.multi_cell(0, 10, clean_title)
+                            pdf.set_font("Arial", size=11)
+                            pdf.set_text_color(40, 40, 40) # Volta para o texto normal
+                        else:
+                            # Texto normal e Bullets
+                            pdf.set_font("Arial", size=11)
+                            # Limpeza de caracteres especiais para evitar erro no FPDF 1.7
+                            clean_line = line.replace('\u2022', '-').replace('\u2013', '-').replace('**', '')
+                            pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
+
                     return pdf.output(dest='S').encode('latin-1')
 
                 # --- Gerador de DOCX ---
