@@ -99,13 +99,60 @@ try:
                 """
                 st.markdown(report_html, unsafe_allow_html=True)
                 
+                # --- 7. EXPORTAÇÃO (PDF e DOCX) ---
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.download_button(
-                    label="📥 Download Official Proposal (.txt)",
-                    data=response.text,
-                    file_name="Robotmaster_V7_Proposal.txt",
-                    mime="text/plain"
-                )
+                
+                from fpdf import FPDF
+                from docx import Document
+                from io import BytesIO
+
+                # Prepara os containers de download
+                col_down1, col_down2 = st.columns(2)
+
+                # --- Gerador de PDF ---
+                def create_pdf(text):
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_font("Arial", size=11)
+                    # Limpeza de caracteres para evitar erro de codificação no FPDF 1.7
+                    clean_text = text.replace('\u2022', '*').replace('\u2013', '-').replace('\u201d', '"').replace('\u201c', '"')
+                    pdf.multi_cell(0, 10, clean_text.encode('latin-1', 'replace').decode('latin-1'))
+                    return pdf.output(dest='S').encode('latin-1')
+
+                # --- Gerador de DOCX ---
+                def create_docx(text):
+                    doc = Document()
+                    doc.add_heading('Robotmaster V7 - Engineering Report', 0)
+                    p = doc.add_paragraph(text)
+                    target = BytesIO()
+                    doc.save(target)
+                    return target.getvalue()
+
+                with col_down1:
+                    try:
+                        pdf_data = create_pdf(raw_text)
+                        st.download_button(
+                            label="📄 Download Report (PDF)",
+                            data=pdf_data,
+                            file_name="Robotmaster_V7_Audit.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error("Error generating PDF")
+
+                with col_down2:
+                    try:
+                        docx_data = create_docx(raw_text)
+                        st.download_button(
+                            label="📝 Download Report (Word)",
+                            data=docx_data,
+                            file_name="Robotmaster_V7_Audit.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error("Error generating Word doc")
                 
             except Exception as e:
                 if "429" in str(e):
