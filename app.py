@@ -42,28 +42,27 @@ else:
             st.success("Document read successfully!")
             
             if st.button("Analyze Project & Generate Proposal"):
-                with st.spinner("AI Engineering Team is analyzing the scope..."):
-                    try:
-                        system_instruction = """
-                        You are the Senior Integration and Sales Engineer at Robotmaster. 
-                        Your mission is to read the client's machinery scope and define the best Off-Line Programming (OLP) software architecture using Robotmaster V7.
-                        
-                        Based on the provided document, you MUST generate a report with the following structure:
-                        1. 📋 Machinery Summary
-                        2. 🛒 Recommended V7 Modules
-                        3. ⚙️ Post-Processor
-                        4. 🚨 Technical Risk Alerts
-                        5. 💡 Sales Pitch
-                        
-                        Respond strictly in English, using professional industrial robotics terminology.
-                        """
-                        
-                        # Motor 2026 (google-genai) - Versão 2.5 Flash
+            with st.spinner("AI Engineering Team is analyzing the scope..."):
+                try:
+                    # --- Motor 2026 (Versão 2.5 Flash) ---
                     client = genai.Client(api_key=api_key)
+                    
+                    system_instruction = """
+                    You are the Senior Integration and Sales Engineer at Robotmaster. 
+                    Your mission is to read the client's machinery scope and define the best Off-Line Programming (OLP) software architecture using Robotmaster V7.
+                    
+                    Based on the provided document, you MUST generate a report with the following structure:
+                    1. 📋 Machinery Summary
+                    2. 🛒 Recommended V7 Modules
+                    3. ⚙️ Post-Processor
+                    4. 🚨 Technical Risk Alerts
+                    5. 💡 Sales Pitch
+                    
+                    Respond strictly in English, using professional industrial robotics terminology.
+                    """
                     
                     prompt = f"{system_instruction}\n\nHere is the client's document:\n{pdf_text}"
                     
-                    # Chamada oficial para o modelo 2.5
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
                         contents=prompt,
@@ -72,3 +71,9 @@ else:
                     st.markdown("---")
                     st.markdown("### 📊 Engineering & Integration Report")
                     st.write(response.text)
+                    
+                except Exception as e:
+                    if "429" in str(e):
+                        st.error("🚀 **Model 2.5 Flash is warming up.** Please wait 30 seconds and click again.")
+                    else:
+                        st.error(f"AI Analysis Error: {e}")
