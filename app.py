@@ -29,9 +29,15 @@ if not api_key:
     st.error("⚠️ Configuration Error: API Key not found in Secrets.")
     st.stop()
 
-# --- 2. CLEAN INTERFACE (International Standard) ---
-st.write("## 🤖 OLP Project Auditor")
-st.markdown("##### Instant technical viability and integration risk analysis.")
+# --- 2. CLEAN INTERFACE (No Redundancy) ---
+# Adiciona apenas um espaço e o campo de upload
+st.markdown("<br>", unsafe_allow_html=True) 
+
+uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
+
+if not uploaded_file:
+    st.info("💡 Please upload the technical scope to start the analysis.")
+    st.stop()
 
 # Campo único de upload - sem caixas extras
 uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
