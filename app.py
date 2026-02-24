@@ -1,5 +1,6 @@
 import streamlit as st
 import PyPDF2
+import re
 from google import genai
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
@@ -29,7 +30,6 @@ if not uploaded_file:
     st.stop()
 
 # --- 5. PROCESSAMENTO & AI ANALYSIS ---
-# Se chegou aqui, é porque o arquivo foi carregado
 try:
     with st.spinner("Extracting technical data from PDF..."):
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -71,31 +71,11 @@ try:
                 st.markdown("---")
                 st.markdown("### 📊 Engineering & Integration Report")
                 
-                # Container elegante: Fundo branco, texto grafite, sem azul.
-                report_html = f"""
-                <div style="
-                    background-color: #ffffff; 
-                    padding: 30px; 
-                    border-radius: 12px; 
-                    border: 1px solid #d1d1d1; 
-                    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
-                    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-                    color: #1a1a1a;
-                    line-height: 1.6;
-                    font-size: 16px;
-                ">
-                    {response.text.replace('\n', '<br>')}
-                </div>
-                """
-                # --- 6. EXIBIÇÃO DO RELATÓRIO (Design Premium & Legibilidade) ---
-                st.markdown("---")
-                
-                # Tratamento do texto para remover excesso de asteriscos e formatar seções
-                import re
-                processed_text = response.text
-                processed_text = processed_text.replace('---', '<hr style="border:0; height:1px; background:#e0e0e0; margin:20px 0;">')
-                processed_text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#D32F2F; font-size:18px;">\1</b>', processed_text) # Títulos em Vermelho Robotmaster
-                processed_text = processed_text.replace('* ', '• ') # Bullet points mais limpos
+                # Tratamento de texto para legibilidade máxima
+                raw_text = response.text
+                # Remove asteriscos e coloca títulos em Vermelho Robotmaster
+                processed_text = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#D32F2F; font-size:1.15em; display:inline-block; margin-top:15px;">\1</b>', raw_text)
+                processed_text = processed_text.replace('* ', '• ')
                 processed_text = processed_text.replace('\n', '<br>')
 
                 report_html = f"""
@@ -105,14 +85,14 @@ try:
                     border-radius: 15px; 
                     border: 1px solid #d1d1d1; 
                     box-shadow: 0px 10px 30px rgba(0,0,0,0.1);
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    color: #333333;
+                    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+                    color: #222222;
                     line-height: 1.8;
                     font-size: 17px;
-                    max-width: 900px;
+                    max-width: 850px;
                     margin: auto;
                 ">
-                    <div style="text-align: right; color: #999; font-size: 12px;">OFFICIAL TECHNICAL REPORT V7</div>
+                    <div style="text-align: right; color: #bbb; font-size: 10px; letter-spacing: 1px; font-weight: bold;">ROBOTMASTER V7 OFFICIAL AUDIT</div>
                     <br>
                     {processed_text}
                 </div>
@@ -126,3 +106,12 @@ try:
                     file_name="Robotmaster_V7_Proposal.txt",
                     mime="text/plain"
                 )
+                
+            except Exception as e:
+                if "429" in str(e):
+                    st.warning("🚀 Model is warming up. Please wait 30 seconds and click again.")
+                else:
+                    st.error(f"AI Error: {e}")
+
+except Exception as e:
+    st.error(f"File Error: {e}")
