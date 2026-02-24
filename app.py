@@ -29,9 +29,16 @@ if not api_key:
     st.error("⚠️ Configuration Error: API Key not found in Secrets.")
     st.stop()
 
-# --- PROFESSIONAL INTERFACE (International Standard) ---
-st.markdown("## 🤖 OLP Project Auditor")
-st.write("Instant technical viability and integration risk analysis.")
+# --- 2. CLEAN INTERFACE (International Standard) ---
+st.write("## 🤖 OLP Project Auditor")
+st.markdown("##### Instant technical viability and integration risk analysis.")
+
+# Campo único de upload - sem caixas extras
+uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
+
+if not uploaded_file:
+    st.info("💡 Please upload a PDF file to start the audit.")
+    st.stop() # Isso "limpa" o resto da tela até que o arquivo seja enviado
 
 # The field where the user drops the file
 uploaded_file = st.file_uploader("Upload Client RFP / Machinery Scope (PDF)", type="pdf")
