@@ -86,13 +86,13 @@ try:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # --- 7. FUNÇÃO GERADORA DE PDF (Blindada) ---
+                # --- 7. FUNÇÃO GERADORA DE PDF (Design com Títulos Destacados) ---
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
-                    rm_blue = (0, 90, 156)
+                    rm_blue = (0, 90, 156) # Azul Robotmaster Oficial
                     
-                    # Logo e Cabeçalho
+                    # 1. CABEÇALHO COM LOGO
                     try:
                         pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 33)
                     except:
@@ -106,6 +106,51 @@ try:
                     pdf.cell(0, 8, "Robotmaster V7 OLP Audit", ln=True, align='R')
                     pdf.line(10, 35, 200, 35)
                     pdf.ln(15)
+
+                    # 2. LIMPEZA E FORMATAÇÃO
+                    pdf.set_text_color(40, 40, 40) # Cinza escuro para o corpo
+
+                    # Dicionário de limpeza para evitar erros de caractere
+                    chars_to_replace = {
+                        '\u2022': '-', '\u2013': '-', '\u2014': '-', '\u201c': '"', 
+                        '\u201d': '"', '\u2018': "'", '\u2019': "'", '📋': '', 
+                        '🛒': '', '⚙️': '', '🚨': '', '💡': '', '📊': ''
+                    }
+                    
+                    for line in text.split('\n'):
+                        line = line.strip()
+                        for char, rep in chars_to_replace.items():
+                            line = line.replace(char, rep)
+                        
+                        # Guardamos se a linha original tinha negrito (**) antes de limpar
+                        is_bold_sub = '**' in line
+                        line = line.replace('**', '')
+
+                        if not line:
+                            pdf.ln(4)
+                            continue
+
+                        # --- LÓGICA DE TAMANHOS ---
+                        # Títulos Principais (1., 2., ###, Subject, Dear)
+                        if re.match(r'^(\d+\.|###|Subject:|Dear)', line):
+                            pdf.set_font("Arial", 'B', 12) # Tamanho 12
+                            pdf.set_text_color(*rm_blue)   # Azul Robotmaster
+                            pdf.multi_cell(0, 8, line.encode('latin-1', 'replace').decode('latin-1'))
+                            pdf.ln(2)
+                        
+                        # Subtítulos ou destaques no meio do texto
+                        elif is_bold_sub:
+                            pdf.set_font("Arial", 'B', 11) # Mesmo tamanho do corpo, mas Negrito
+                            pdf.set_text_color(40, 40, 40) # Cinza escuro
+                            pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
+                        
+                        # Texto Normal
+                        else:
+                            pdf.set_font("Arial", size=11)
+                            pdf.set_text_color(40, 40, 40)
+                            pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
+                    
+                    return pdf.output(dest='S').encode('latin-1')
 
                     # Limpeza de caracteres para o PDF não quebrar
                     chars_to_replace = {
