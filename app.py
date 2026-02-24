@@ -72,17 +72,52 @@ try:
                 
                 raw_text = response.text
 
-                # --- 6. EXIBIÇÃO NA TELA (Design Premium) ---
+                # --- 6. EXIBIÇÃO NA TELA (Design Premium Corrigido) ---
                 st.markdown("---")
-                st.markdown("### 📊 Engineering & Integration Report")
                 
-                processed_html = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#D32F2F; font-size:1.15em; display:inline-block; margin-top:15px;">\1</b>', raw_text)
+                raw_text = response.text
+                
+                # 1. Ajuste dos Títulos Principais (1., 2., 3., etc.)
+                # Colocamos fonte 24px (maior), Azul Robotmaster (#005a9c) e um traço fino embaixo
+                processed_html = re.sub(
+                    r'^(\d+\..*?)$', 
+                    r'<h3 style="color:#005a9c; font-size:24px; margin-top:30px; margin-bottom:10px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">\1</h3>', 
+                    raw_text, flags=re.MULTILINE
+                )
+                
+                # 2. Ajuste de títulos estilo Markdown ### (se a IA usar)
+                processed_html = re.sub(
+                    r'^### (.*?)$', 
+                    r'<h3 style="color:#005a9c; font-size:24px; margin-top:30px; margin-bottom:10px; font-weight: bold;">\1</h3>', 
+                    processed_html, flags=re.MULTILINE
+                )
+
+                # 3. Ajuste dos Subtítulos (texto entre **)
+                # Mantemos o negrito, mas com fonte 17px (menor que o título azul) e cor grafite
+                processed_html = re.sub(
+                    r'\*\*(.*?)\*\*', 
+                    r'<b style="color:#444444; font-size:17px; font-weight: bold;">\1</b>', 
+                    processed_html
+                )
+
+                # 4. Ajustes de quebras e bullets
                 processed_html = processed_html.replace('\n', '<br>')
 
                 st.markdown(f"""
-                <div style="background-color: #ffffff; padding: 40px; border-radius: 15px; border: 1px solid #d1d1d1; box-shadow: 0px 10px 30px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; color: #222222; line-height: 1.8; font-size: 17px;">
-                    <div style="text-align: right; color: #bbb; font-size: 10px; font-weight: bold;">OFFICIAL V7 AUDIT</div>
-                    <br>{processed_html}
+                <div style="
+                    background-color: #ffffff; 
+                    padding: 45px; 
+                    border-radius: 15px; 
+                    border: 1px solid #d1d1d1; 
+                    box-shadow: 0px 10px 40px rgba(0,0,0,0.1);
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    color: #333333;
+                    line-height: 1.8;
+                ">
+                    <div style="text-align: right; color: #ccc; font-size: 11px; font-weight: bold; letter-spacing: 2px;">OFFICIAL ENGINEERING AUDIT</div>
+                    <div style="font-size: 16px;">
+                        {processed_html}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
