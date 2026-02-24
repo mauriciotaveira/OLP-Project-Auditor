@@ -34,29 +34,29 @@ if not uploaded_file:
     st.info("💡 Please upload the technical scope to start.")
     st.stop()
 
-# --- 5. PROCESSAMENTO & AI ---
+# --- 5. PROCESSAMENTO & AI ANALYSIS ---
 try:
-    pdf_reader = PyPDF2.PdfReader(uploaded_file)
-    pdf_text = ""
-    for page in pdf_reader.pages:
-        pdf_text += page.extract_text() or ""
-    
-    if st.button("Analyze Project & Generate Proposal"):
-        with st.spinner("Analyzing with Gemini 2.5 Flash..."):
-            client = genai.Client(api_key=api_key)
-            
-            system_instruction = "You are the Senior Engineer at Robotmaster. Structure: 1. Machinery Summary, 2. Recommended V7 Modules, 3. Post-Processor, 4. Technical Risk Alerts, 5. Sales Pitch. Respond in English. No emojis."
-            
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=f"{system_instruction}\n\nDocument:\n{pdf_text}",
-            )
-            
-            raw_text = response.text
-
-            # --- 6. EXIBIÇÃO NA TELA (Design Premium Vermelho Robotmaster) ---
-                st.markdown("---")
+    if uploaded_file:
+        pdf_reader = PyPDF2.PdfReader(uploaded_file)
+        pdf_text = ""
+        for page in pdf_reader.pages:
+            pdf_text += page.extract_text() or ""
+        
+        if st.button("Analyze Project & Generate Proposal"):
+            with st.spinner("Analyzing with Gemini 2.5 Flash..."):
+                client = genai.Client(api_key=api_key)
+                
+                system_instruction = "You are the Senior Engineer at Robotmaster. Structure: 1. Machinery Summary, 2. Recommended V7 Modules, 3. Post-Processor, 4. Technical Risk Alerts, 5. Sales Pitch. Respond in English. No emojis."
+                
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=f"{system_instruction}\n\nDocument:\n{pdf_text}",
+                )
+                
                 raw_text = response.text
+
+                # --- 6. EXIBIÇÃO NA TELA (Design Premium Robotmaster) ---
+                st.markdown("---")
                 
                 # Títulos em Vermelho Robotmaster (32px)
                 processed_html = re.sub(
@@ -76,18 +76,15 @@ try:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # --- 7. FUNÇÃO GERADORA DE PDF (Com Logótipo e Cores) ---
+                # --- 7. FUNÇÃO PDF (Com Logo e Cores) ---
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
                     
-                    # Tentar inserir o logótipo (ajuste o nome do ficheiro se necessário)
                     try:
-                        pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 45)
+                        pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 40)
                     except:
-                        pdf.set_font("Arial", 'B', 12)
-                        pdf.set_text_color(211, 47, 47)
-                        pdf.cell(0, 10, "ROBOTMASTER", ln=True)
+                        pass
 
                     pdf.set_font("Arial", 'B', 16)
                     pdf.set_text_color(211, 47, 47) # Vermelho
@@ -99,7 +96,6 @@ try:
                         line = line.strip()
                         is_bold = '**' in line
                         clean_line = line.replace('**', '')
-                        
                         if not clean_line:
                             pdf.ln(4)
                             continue
@@ -118,33 +114,22 @@ try:
                             pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
                     return pdf.output(dest='S').encode('latin-1')
 
-                # --- 8. BOTÕES DE EXPORTAÇÃO ALINHADOS ---
+                # --- 8. BOTÕES DE EXPORTAÇÃO (Alinhados) ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 u_id = str(int(time.time()))
                 col_down1, col_down2, col_down3 = st.columns(3)
 
                 with col_down1:
-                    st.download_button(
-                        "📄 PDF Report", 
-                        create_pdf(raw_text), 
-                        f"Audit_{u_id}.pdf", 
-                        key=f"pdf_{u_id}", 
-                        use_container_width=True
-                    )
+                    st.download_button("📄 PDF Report", create_pdf(raw_text), f"Audit_{u_id}.pdf", key=f"pdf_{u_id}", use_container_width=True)
                 with col_down2:
                     doc = Document()
-                    doc.add_heading('Robotmaster V7 Audit', 0)
                     doc.add_paragraph(raw_text)
                     target = BytesIO()
                     doc.save(target)
-                    st.download_button(
-                        "📝 Word Doc", 
-                        target.getvalue(), 
-                        f"Audit_{u_id}.docx", 
-                        key=f"word_{u_id}", 
-                        use_container_width=True
-                    )
+                    st.download_button("📝 Word Doc", target.getvalue(), f"Audit_{u_id}.docx", key=f"word_{u_id}", use_container_width=True)
                 with col_down3:
-                    # Link Mailto simplificado e alinhado
                     mailto = "mailto:sales@robotmaster.com?subject=Robotmaster%20Audit&body=Attached%20is%20the%20report."
                     st.link_button("📧 Email Report", mailto, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error: {e}")
