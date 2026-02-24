@@ -46,7 +46,19 @@ try:
             with st.spinner("Analyzing with Gemini 2.5 Flash..."):
                 client = genai.Client(api_key=api_key)
                 
-                system_instruction = "You are the Senior Engineer at Robotmaster. Structure: 1. Machinery Summary, 2. Recommended V7 Modules, 3. Post-Processor, 4. Technical Risk Alerts, 5. Sales Pitch. Respond in English. No emojis."
+                # INSTRUÇÃO "OLHOS DE ANBU" - FOCO EM MIG/MAG E ROI
+                system_instruction = """
+                You are a Senior Robotmaster Sales & Integration Engineer. 
+                Structure your report with these sections:
+                1. Machinery Summary: Detail robots, controllers, and axes.
+                2. Recommended V7 Modules: Why each is needed.
+                3. Welding Management (MIG/MAG): Detail torch angles, wire feed, and voltage control via Robotmaster.
+                4. ROI Comparative Table: Create a Markdown table comparing 'Manual/Teach Pendant' vs 'Robotmaster V7' for: 
+                   Programming Time, Robot Downtime, and Path Accuracy.
+                5. Post-Processor & Technical Risks.
+                6. Sales Pitch: 360-degree optimization.
+                Respond strictly in English. No emojis.
+                """
                 
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
@@ -55,7 +67,7 @@ try:
                 
                 raw_text = response.text
 
-                # --- 6. EXIBIÇÃO NA TELA (Design Premium Robotmaster) ---
+                # --- 6. EXIBIÇÃO NA TELA (Design Premium) ---
                 st.markdown("---")
                 
                 # Títulos em Vermelho Robotmaster (32px)
@@ -67,6 +79,12 @@ try:
                 
                 # Subtítulos em Azul Robotmaster (20px)
                 processed_html = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#005a9c; font-size:20px;">\1</b>', processed_html)
+                
+                # Estilização de Tabelas ROI
+                processed_html = processed_html.replace('<table>', '<table style="width:100%; border-collapse:collapse; margin:20px 0; border:1px solid #ddd;">')
+                processed_html = processed_html.replace('<th>', '<th style="background-color:#005a9c; color:white; padding:12px; border:1px solid #ddd;">')
+                processed_html = processed_html.replace('<td>', '<td style="padding:10px; border:1px solid #ddd; text-align:center;">')
+                
                 processed_html = processed_html.replace('\n', '<br>')
 
                 st.markdown(f"""
@@ -80,54 +98,41 @@ try:
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
-                    
                     try:
                         pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 40)
                     except:
                         pass
-
                     pdf.set_font("Arial", 'B', 16)
-                    pdf.set_text_color(211, 47, 47) # Vermelho
+                    pdf.set_text_color(211, 47, 47)
                     pdf.cell(0, 10, "Engineering & Integration Report", ln=True, align='R')
                     pdf.line(10, 35, 200, 35)
                     pdf.ln(15)
-
                     for line in text.split('\n'):
                         line = line.strip()
                         is_bold = '**' in line
                         clean_line = line.replace('**', '')
-                        if not clean_line:
-                            pdf.ln(4)
-                            continue
-                        
+                        if not clean_line or "|" in clean_line: continue # Ignora linhas de tabela no PDF simples
                         if re.match(r'^\d+\.', clean_line):
-                            pdf.set_font("Arial", 'B', 14)
-                            pdf.set_text_color(211, 47, 47) # Título Vermelho
+                            pdf.set_font("Arial", 'B', 14); pdf.set_text_color(211, 47, 47)
                             pdf.multi_cell(0, 10, clean_line.encode('latin-1', 'replace').decode('latin-1'))
                         elif is_bold:
-                            pdf.set_font("Arial", 'B', 11)
-                            pdf.set_text_color(0, 90, 156) # Subtítulo Azul
+                            pdf.set_font("Arial", 'B', 11); pdf.set_text_color(0, 90, 156)
                             pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
                         else:
-                            pdf.set_font("Arial", size=11)
-                            pdf.set_text_color(40, 40, 40)
+                            pdf.set_font("Arial", size=11); pdf.set_text_color(40, 40, 40)
                             pdf.multi_cell(0, 7, clean_line.encode('latin-1', 'replace').decode('latin-1'))
                     return pdf.output(dest='S').encode('latin-1')
 
-                # --- 8. BOTÕES DE EXPORTAÇÃO (Alinhados) ---
+                # --- 8. BOTÕES ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 u_id = str(int(time.time()))
-                col_down1, col_down2, col_down3 = st.columns(3)
-
-                with col_down1:
-                    st.download_button("📄 PDF Report", create_pdf(raw_text), f"Audit_{u_id}.pdf", key=f"pdf_{u_id}", use_container_width=True)
-                with col_down2:
-                    doc = Document()
-                    doc.add_paragraph(raw_text)
-                    target = BytesIO()
-                    doc.save(target)
-                    st.download_button("📝 Word Doc", target.getvalue(), f"Audit_{u_id}.docx", key=f"word_{u_id}", use_container_width=True)
-                with col_down3:
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.download_button("📄 PDF Report", create_pdf(raw_text), f"Audit_{u_id}.pdf", key=f"p_{u_id}", use_container_width=True)
+                with c2:
+                    doc = Document(); doc.add_paragraph(raw_text); target = BytesIO(); doc.save(target)
+                    st.download_button("📝 Word Doc", target.getvalue(), f"Audit_{u_id}.docx", key=f"w_{u_id}", use_container_width=True)
+                with c3:
                     mailto = "mailto:sales@robotmaster.com?subject=Robotmaster%20Audit&body=Attached%20is%20the%20report."
                     st.link_button("📧 Email Report", mailto, use_container_width=True)
 
