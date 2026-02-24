@@ -18,7 +18,7 @@ st.markdown("<h2 style='text-align: center; color: #D32F2F;'>OLP Project Auditor
 st.markdown("<p style='text-align: center; color: #555555;'>Instant technical viability analysis and V7 licensing recommendations.</p>", unsafe_allow_html=True)
 st.write("---")
 
-# --- 3. ACCESS CONFIGURATION ---
+# --- 3. CONFIGURAÇÃO DE ACESSO ---
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 if not api_key:
     st.error("⚠️ API Key not found in Streamlit Secrets.")
@@ -50,25 +50,17 @@ try:
                 client = genai.Client(api_key=api_key)
                 
                 system_instruction = """
-                You are the Senior LEAD Integration & Sales Engineer at Robotmaster. 
-                Your mission is to provide a comprehensive, high-level technical audit for an OLP (Offline Programming) implementation.
-
-                STRICT RULES FOR YOUR RESPONSE:
-                1. FORMATTING: Use '### 1. Title', '### 2. Title' for main sections. This is CRITICAL for the app's UI colors.
-                2. DEPTH: Be extremely detailed. Don't just list items; explain the 'why' behind each technical choice.
-                3. TERMINOLOGY: Use advanced industrial robotics terms (kinematics, singularities, TCP calibration, KRL syntax, 7-axis synchronization).
-                4. CONTENT:
-                   - 1. Machinery Summary: Detail every robot (brand/model), controller, and external axis. Mention CAD integration (SolidWorks).
-                   - 2. Recommended V7 Modules: Explain how each module (Core, Welding, etc.) solves a specific client problem.
-                   - 3. Post-Processor: Detail the specific controller language (e.g., KUKA KRL) and the reliability of native code.
-                   - 4. Technical Risk Alerts: Analyze collision zones, reach limits, and the importance of accurate cell calibration.
-                   - 5. Sales Pitch (ROI): Quantify the benefits - elimination of downtime, faster time-to-market, and precision.
-
-                5. LANGUAGE: Respond strictly in English. No emojis.
-                6. VALIDATION: If the document is not about robotics or machinery, inform the user that no technical scope was found.
+                You are the Senior Integration and Sales Engineer at Robotmaster. 
+                Structure your report as follows:
+                1. Machinery Summary
+                2. Recommended V7 Modules
+                3. Post-Processor
+                4. Technical Risk Alerts
+                5. Sales Pitch
+                Respond strictly in English. Do not use emojis in the content.
                 """
                 
-                prompt = f"{system_instruction}\n\nDocument Content to Analyze:\n{pdf_text}"
+                prompt = f"{system_instruction}\n\nDocument Content:\n{pdf_text}"
                 
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
@@ -80,211 +72,79 @@ try:
                 # --- 6. EXIBIÇÃO NA TELA (Design Premium Corrigido) ---
                 st.markdown("---")
                 
-                raw_text = response.text
+                # Títulos Principais em Azul Robotmaster (24px)
+                processed_html = re.sub(r'^(\d+\..*?)$', r'<h3 style="color:#005a9c; font-size:24px; margin-top:30px; margin-bottom:10px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">\1</h3>', raw_text, flags=re.MULTILINE)
                 
-                # 1. Ajuste dos Títulos Principais (1., 2., 3., etc.)
-                # Colocamos fonte 24px (maior), Azul Robotmaster (#005a9c) e um traço fino embaixo
-                processed_html = re.sub(
-                    r'^(\d+\..*?)$', 
-                    r'<h3 style="color:#005a9c; font-size:24px; margin-top:30px; margin-bottom:10px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">\1</h3>', 
-                    raw_text, flags=re.MULTILINE
-                )
-                
-                # 2. Ajuste de títulos estilo Markdown ### (se a IA usar)
-                processed_html = re.sub(
-                    r'^### (.*?)$', 
-                    r'<h3 style="color:#005a9c; font-size:24px; margin-top:30px; margin-bottom:10px; font-weight: bold;">\1</h3>', 
-                    processed_html, flags=re.MULTILINE
-                )
-
-                # 3. Ajuste dos Subtítulos (texto entre **)
-                # Mantemos o negrito, mas com fonte 17px (menor que o título azul) e cor grafite
-                processed_html = re.sub(
-                    r'\*\*(.*?)\*\*', 
-                    r'<b style="color:#444444; font-size:17px; font-weight: bold;">\1</b>', 
-                    processed_html
-                )
-
-                # 4. Ajustes de quebras e bullets
+                # Subtítulos (texto entre **) em Grafite (17px)
+                processed_html = re.sub(r'\*\*(.*?)\*\*', r'<b style="color:#444444; font-size:17px; font-weight: bold;">\1</b>', processed_html)
                 processed_html = processed_html.replace('\n', '<br>')
 
                 st.markdown(f"""
-                <div style="
-                    background-color: #ffffff; 
-                    padding: 45px; 
-                    border-radius: 15px; 
-                    border: 1px solid #d1d1d1; 
-                    box-shadow: 0px 10px 40px rgba(0,0,0,0.1);
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    color: #333333;
-                    line-height: 1.8;
-                ">
+                <div style="background-color: #ffffff; padding: 45px; border-radius: 15px; border: 1px solid #d1d1d1; box-shadow: 0px 10px 40px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif; color: #333333; line-height: 1.8;">
                     <div style="text-align: right; color: #ccc; font-size: 11px; font-weight: bold; letter-spacing: 2px;">OFFICIAL ENGINEERING AUDIT</div>
-                    <div style="font-size: 16px;">
-                        {processed_html}
-                    </div>
+                    <div style="font-size: 16px;">{processed_html}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-                # --- 7. FUNÇÃO GERADORA DE PDF (Design com Títulos Destacados) ---
+                # --- 7. FUNÇÃO GERADORA DE PDF ---
                 def create_pdf(text):
                     pdf = FPDF()
                     pdf.add_page()
-                    rm_blue = (0, 90, 156) # Azul Robotmaster Oficial
-                    
-                    # 1. CABEÇALHO COM LOGO
+                    rm_blue = (0, 90, 156)
                     try:
                         pdf.image("LOGO_Robotmaster_RGB.png", 10, 8, 33)
                     except:
                         pass
-                    
                     pdf.set_font("Arial", 'B', 16)
                     pdf.set_text_color(*rm_blue)
                     pdf.cell(0, 10, "Engineering & Integration Report", ln=True, align='R')
-                    pdf.set_font("Arial", 'I', 10)
-                    pdf.set_text_color(120, 120, 120)
-                    pdf.cell(0, 8, "Robotmaster V7 OLP Audit", ln=True, align='R')
                     pdf.line(10, 35, 200, 35)
                     pdf.ln(15)
 
-                    # 2. LIMPEZA E FORMATAÇÃO
-                    pdf.set_text_color(40, 40, 40) # Cinza escuro para o corpo
-
-                    # Dicionário de limpeza para evitar erros de caractere
-                    chars_to_replace = {
-                        '\u2022': '-', '\u2013': '-', '\u2014': '-', '\u201c': '"', 
-                        '\u201d': '"', '\u2018': "'", '\u2019': "'", '📋': '', 
-                        '🛒': '', '⚙️': '', '🚨': '', '💡': '', '📊': ''
-                    }
-                    
-                    for line in text.split('\n'):
-                        line = line.strip()
-                        for char, rep in chars_to_replace.items():
-                            line = line.replace(char, rep)
-                        
-                        # Guardamos se a linha original tinha negrito (**) antes de limpar
-                        is_bold_sub = '**' in line
-                        line = line.replace('**', '')
-
-                        if not line:
-                            pdf.ln(4)
-                            continue
-
-                        # --- LÓGICA DE TAMANHOS ---
-                        # Títulos Principais (1., 2., ###, Subject, Dear)
-                        if re.match(r'^(\d+\.|###|Subject:|Dear)', line):
-                            pdf.set_font("Arial", 'B', 12) # Tamanho 12
-                            pdf.set_text_color(*rm_blue)   # Azul Robotmaster
-                            pdf.multi_cell(0, 8, line.encode('latin-1', 'replace').decode('latin-1'))
-                            pdf.ln(2)
-                        
-                        # Subtítulos ou destaques no meio do texto
-                        elif is_bold_sub:
-                            pdf.set_font("Arial", 'B', 11) # Mesmo tamanho do corpo, mas Negrito
-                            pdf.set_text_color(40, 40, 40) # Cinza escuro
-                            pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
-                        
-                        # Texto Normal
-                        else:
-                            pdf.set_font("Arial", size=11)
-                            pdf.set_text_color(40, 40, 40)
-                            pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
-                    
-                    return pdf.output(dest='S').encode('latin-1')
-
-                    # Limpeza de caracteres para o PDF não quebrar
-                    chars_to_replace = {
-                        '\u2022': '-', '\u2013': '-', '\u2014': '-', '\u201c': '"', 
-                        '\u201d': '"', '\u2018': "'", '\u2019': "'", '📋': '', 
-                        '🛒': '', '⚙️': '', '🚨': '', '💡': '', '📊': ''
-                    }
-                    
+                    chars_to_replace = {'\u2022': '-', '\u2013': '-', '\u201c': '"', '\u201d': '"'}
                     for line in text.split('\n'):
                         line = line.strip()
                         for char, rep in chars_to_replace.items():
                             line = line.replace(char, rep)
                         line = line.replace('**', '')
-
                         if not line:
                             pdf.ln(4)
                             continue
-
-                        # Títulos em Azul
-                        if re.match(r'^(\d+\.|###|Subject:|Dear)', line):
+                        if re.match(r'^(\d+\.|###)', line):
                             pdf.set_font("Arial", 'B', 12)
                             pdf.set_text_color(*rm_blue)
                             pdf.multi_cell(0, 8, line.encode('latin-1', 'replace').decode('latin-1'))
-                            pdf.ln(2)
                         else:
                             pdf.set_font("Arial", size=11)
                             pdf.set_text_color(40, 40, 40)
                             pdf.multi_cell(0, 7, line.encode('latin-1', 'replace').decode('latin-1'))
-                    
                     return pdf.output(dest='S').encode('latin-1')
 
-                # --- 8. BOTÕES DE DOWNLOAD ---
+                # --- 8. EXPORTAÇÃO E ENVIO ---
                 st.markdown("<br>", unsafe_allow_html=True)
-                col_down1, col_down2 = st.columns(2)
+                col_down1, col_down2, col_down3 = st.columns(3)
 
                 with col_down1:
-                    try:
-                        pdf_bytes = create_pdf(raw_text)
-                        st.download_button(
-                            label="📄 Download PDF Report",
-                            data=pdf_bytes,
-                            file_name="Robotmaster_V7_Report.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        st.error(f"PDF Error: {e}")
+                    pdf_bytes = create_pdf(raw_text)
+                    st.download_button("📄 PDF Report", pdf_bytes, "Robotmaster_Audit.pdf", "application/pdf", use_container_width=True)
 
                 with col_down2:
-                    try:
-                        doc = Document()
-                        doc.add_heading('Robotmaster V7 Audit', 0)
-                        doc.add_paragraph(raw_text)
-                        target = BytesIO()
-                        doc.save(target)
-                        st.download_button(
-                            label="📝 Download Word Doc",
-                            data=target.getvalue(),
-                            file_name="Robotmaster_V7_Report.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
-                        )
-                    except Exception as e:
-                        st.error(f"Word Error: {e}")
+                    doc = Document()
+                    doc.add_heading('Robotmaster V7 Audit', 0)
+                    doc.add_paragraph(raw_text)
+                    target = BytesIO()
+                    doc.save(target)
+                    st.download_button("📝 Word Doc", target.getvalue(), "Robotmaster_Audit.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
+
+                with col_down3:
+                    email_receiver = "sales@robotmaster.com"
+                    email_subject = "Robotmaster V7 Audit Report"
+                    email_body = raw_text.replace('\n', '%0D%0A')
+                    mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={email_body}"
+                    st.markdown(f'<a href="{mailto_link}" style="text-decoration:none;"><div style="background-color:#005a9c;color:white;padding:10px;text-align:center;border-radius:5px;font-weight:bold;height:38px;line-height:18px;">📧 Email</div></a>', unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"AI Error: {e}")
 
 except Exception as e:
     st.error(f"File Error: {e}")
-    # --- 9. ENVIO RÁPIDO (E-mail) ---
-                st.markdown("---")
-                st.markdown("### ✉️ Quick Send")
-                
-                # Criar o link do e-mail com o corpo do relatório
-                email_receiver = "vendas@robotmaster.com" # Você pode mudar para o e-mail do cliente
-                email_subject = "Robotmaster V7 Audit - Engineering Report"
-                # Limpa o texto para o link do e-mail não quebrar
-                email_body = raw_text.replace('\n', '%0D%0A') 
-                
-                mailto_link = f"mailto:{email_receiver}?subject={email_subject}&body={email_body}"
-
-                st.markdown(f"""
-                    <a href="{mailto_link}" style="text-decoration: none;">
-                        <div style="
-                            background-color: #005a9c; 
-                            color: white; 
-                            padding: 15px; 
-                            text-align: center; 
-                            border-radius: 10px; 
-                            font-weight: bold;
-                            cursor: pointer;
-                        ">
-                            📧 Open in Outlook / Mail
-                        </div>
-                    </a>
-                """, unsafe_allow_html=True)
