@@ -79,9 +79,9 @@ if st.button("🚀 Run Robotmaster Analysis", use_container_width=True):
                 ## 4. ROI Executive Analysis
                 ## 5. Post-Processor & Risks
                 ## 6. Sales Pitch
-                Important: Use '##' for titles. 
-                DO NOT USE TABLES. For the ROI Analysis, provide exactly 4 bullet points using this exact format:
-                - [Metric Name]: [Manual Process] vs [Robotmaster V7] -> [Quantifiable Savings]
+                Important: DO NOT USE TABLES. Use '##' for main section titles.
+                For the ROI Analysis, provide a COMPREHENSIVE list of all relevant metrics (e.g., Programming Time, Downtime, Scrap, Path Accuracy, Skill Level, Collision Rate). Use this exact format:
+                - **[Metric Name]:** [Manual Process] vs [Robotmaster V7] -> [Quantifiable Savings/Impact]
                 Language: English. Body text must be technical and clear.
                 """
                 
