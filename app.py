@@ -76,10 +76,12 @@ if st.button("🚀 Run Robotmaster Analysis", use_container_width=True):
                 ## 1. Machinery Summary
                 ## 2. Recommended V7 Modules
                 ## 3. Welding Management (MIG/MAG)
-                ## 4. ROI Analysis Table
+                ## 4. ROI Executive Analysis
                 ## 5. Post-Processor & Risks
                 ## 6. Sales Pitch
-                Important: Use '##' for titles. Use standard Markdown tables for ROI. 
+                Important: Use '##' for titles. 
+                DO NOT USE TABLES. For the ROI Analysis, provide exactly 4 bullet points using this exact format:
+                - [Metric Name]: [Manual Process] vs [Robotmaster V7] -> [Quantifiable Savings]
                 Language: English. Body text must be technical and clear.
                 """
                 
