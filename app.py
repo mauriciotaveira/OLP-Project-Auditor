@@ -58,7 +58,7 @@ with st.sidebar:
             st.session_state.current_report = hist['content']
 
 # --- 3. INTERFACE PRINCIPAL ---
-st.markdown("<h1 style='text-align: center; color: #D32F2F;'>Robotmaster AI Auditor</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: #D32F2F;'>Robotmaster AI Auditor</h4>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Upload Client RFP (PDF)", type="pdf")
 
