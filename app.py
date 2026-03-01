@@ -8,7 +8,7 @@ import time
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Robotmaster OLP Auditor", page_icon="🤖", layout="wide")
 
-# CSS "Black Professional" - Forçando Preto Absoluto e Removendo Azul
+# CSS "Nuclear Black" - Forçando Preto Absoluto contra o tema do Streamlit
 st.markdown("""
     <style>
     .report-container {
@@ -20,24 +20,33 @@ st.markdown("""
         line-height: 1.7;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    .report-container, .report-container p, .report-container li { color: #000000 !important; }
-    .report-container h1, .report-container h2, .report-container h3, .report-container h4 {
-        color: #000000 !important; font-weight: 900 !important; margin-top: 30px;
+    /* Regras agressivas para derrubar o azul do Streamlit */
+    div[data-testid="stMarkdownContainer"] p, 
+    div[data-testid="stMarkdownContainer"] li, 
+    div[data-testid="stMarkdownContainer"] span {
+        color: #000000 !important; 
+    }
+    div[data-testid="stMarkdownContainer"] h1, 
+    div[data-testid="stMarkdownContainer"] h2, 
+    div[data-testid="stMarkdownContainer"] h3,
+    div[data-testid="stMarkdownContainer"] h4 {
+        color: #000000 !important; font-weight: 900 !important;
     }
     .report-container h2 {
-        text-transform: uppercase; border-bottom: 3px solid #000000; padding-bottom: 8px; font-size: 22px; letter-spacing: 1px;
+        text-transform: uppercase; border-bottom: 3px solid #000000; padding-bottom: 8px; font-size: 22px; letter-spacing: 1px; margin-top: 30px;
     }
-    .report-container strong, .report-container b { color: #000000 !important; font-weight: 800; }
     .report-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #000000; }
     .stButton>button { border-radius: 6px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# Inicializar Session State
+# Inicializar Session State (A Memória do App)
 if "history" not in st.session_state: st.session_state.history = []
 if "current_report" not in st.session_state: st.session_state.current_report = None
 if "chat_session" not in st.session_state: st.session_state.chat_session = None
 if "mensagens_chat" not in st.session_state: st.session_state.mensagens_chat = []
+# SOLUÇÃO DO ERRO DO CHAT: Guardar a conexão na memória!
+if "genai_client" not in st.session_state: st.session_state.genai_client = None
 
 # --- 2. SIDEBAR ---
 with st.sidebar:
@@ -63,11 +72,13 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 pdf_reader = PyPDF2.PdfReader(uploaded_file)
                 pdf_text = "".join([page.extract_text() or "" for page in pdf_reader.pages])
                 
-                st.write("🤖 Connecting to Gemini 2.5 Flash Neural Network...")
-                # A FORMA MODERNA DE CONECTAR!
-                client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+                st.write("🤖 Connecting to Gemini Neural Network...")
+                # Cria a conexão e GUARDA na memória para o chat não cair depois
+                st.session_state.genai_client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                 
                 st.write("📐 Mapping Kinematics & V7 Architecture...")
+                
+                # PROMPT CORRIGIDO PARA O ROI FICAR GIGANTE
                 system_instruction = """
                 You are an Elite Robotics Solutions Architect & Senior Robotmaster V7 OLP Specialist.
                 Your mission is to analyze client RFPs and deliver a highly technical, persuasive, and data-driven Engineering & Integration Report.
@@ -84,10 +95,9 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 Map the exact Robotmaster V7 modules required. Explain WHY they are needed.
 
                 ## 4. ADVANCED R.O.I. & METRICS COMPARISON
-                List the ROI impact using exactly this format (NO TABLES):
-                - **Programming Time:** [Manual/Teach Pendant] vs [Robotmaster V7] ➔ [Quantifiable Savings]
-                - **Production Downtime:** [Current] vs [Robotmaster V7] ➔ [Quantifiable Savings]
-                - **Path Accuracy & Quality:** [Current] vs [Robotmaster V7] ➔ [Quantifiable Savings]
+                Provide a COMPREHENSIVE and EXTENSIVE list of ALL relevant ROI metrics (minimum 8 to 12 items). Analyze every possible efficiency gain.
+                Use exactly this format for EACH item (NO TABLES):
+                - **[Metric Name]:** [Manual/Teach Pendant] vs [Robotmaster V7] ➔ [Quantifiable Savings/Impact]
 
                 ## 5. RISK ASSESSMENT & MITIGATION
                 Identify technical risks and explain how Robotmaster's Optimization tools automatically mitigate them.
@@ -98,8 +108,7 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 TONE: Highly technical, authoritative, yet persuasive. Use precise industrial robotics terminology. DO NOT USE TABLES.
                 """
                 
-                # Gera o Relatório (Modo Moderno)
-                response = client.models.generate_content(
+                response = st.session_state.genai_client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=f"{system_instruction}\n\nDocument:\n{pdf_text}"
                 )
@@ -108,10 +117,10 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 st.session_state.history.append({"time": time.strftime("%H:%M"), "content": response.text})
                 
                 st.write("✅ Initializing Copilot Chat...")
-                
-                # INICIANDO O CHAT DA FORMA MODERNA!
                 instrucao_chat = f"Atue como meu assistente de pré-vendas Robotmaster. Baseie-se nesta RFP do cliente:\n\n{pdf_text}"
-                st.session_state.chat_session = client.chats.create(
+                
+                # O chat agora usa a conexão guardada na memória!
+                st.session_state.chat_session = st.session_state.genai_client.chats.create(
                     model='gemini-2.5-flash',
                     config={"system_instruction": instrucao_chat}
                 )
@@ -127,6 +136,18 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 st.error(f"Error details: {e}")
     else:
         st.warning("⚠️ Please upload a PDF file first.")
+
+# Função para exportar o chat em Word (.docx)
+def gerar_word_chat(mensagens):
+    doc = Document()
+    doc.add_heading('Histórico do Copiloto - Robotmaster', 0)
+    for msg in mensagens:
+        autor = "Sales Engineer" if msg["role"] == "user" else "Anbu AI"
+        doc.add_heading(autor, level=2)
+        doc.add_paragraph(msg['content'])
+    target = BytesIO()
+    doc.save(target)
+    return target.getvalue()
 
 # --- 4. EXIBIÇÃO EM ABAS (RELATÓRIO E CHAT) ---
 if st.session_state.current_report:
@@ -158,17 +179,14 @@ if st.session_state.current_report:
     with aba_chat:
         st.caption("Converse com a Anbu AI sobre a RFP ou peça para redigir e-mails comerciais.")
         
+        # O botão de exportar chat agora gera um DOCX!
         if st.session_state.mensagens_chat:
-            texto_chat = "--- HISTÓRICO DO COPILOTO (ROBOTMASTER) ---\n\n"
-            for msg in st.session_state.mensagens_chat:
-                autor = "🧑‍💻 Sales Engineer" if msg["role"] == "user" else "🤖 Anbu AI"
-                texto_chat += f"{autor}:\n{msg['content']}\n\n"
-                
+            word_chat_data = gerar_word_chat(st.session_state.mensagens_chat)
             st.download_button(
-                label="📥 Export Chat History (.txt)",
-                data=texto_chat,
-                file_name="Robotmaster_Chat_History.txt",
-                mime="text/plain"
+                label="📥 Export Chat History (.docx)",
+                data=word_chat_data,
+                file_name="Robotmaster_Chat_History.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         st.divider()
         
@@ -176,13 +194,17 @@ if st.session_state.current_report:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
                 
-        if prompt := st.chat_input("Ex: Escreva um e-mail de 3 linhas agradecendo o envio da RFP e destacando a solução de solda..."):
+        if prompt := st.chat_input("Ex: Escreva um e-mail curto destacando a solução de soldagem..."):
             st.session_state.mensagens_chat.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
                 
             with st.chat_message("assistant"):
-                with st.spinner("Analisando..."):
-                    resposta_chat = st.session_state.chat_session.send_message(prompt)
-                    st.markdown(resposta_chat.text)
-            st.session_state.mensagens_chat.append({"role": "assistant", "content": resposta_chat.text})
+                with st.spinner("Pensando..."):
+                    try:
+                        resposta_chat = st.session_state.chat_session.send_message(prompt)
+                        texto_resposta = resposta_chat.text
+                    except Exception as e:
+                        texto_resposta = f"⚠️ Erro de conexão com a IA: {e}. Por favor, clique no botão principal de executar análise novamente."
+                    st.markdown(texto_resposta)
+            st.session_state.mensagens_chat.append({"role": "assistant", "content": texto_resposta})
