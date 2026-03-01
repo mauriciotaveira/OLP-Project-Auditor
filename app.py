@@ -64,7 +64,15 @@ st.markdown("<p style='text-align: center; color: #555;'>Upload the Client RFP f
 
 uploaded_file = st.file_uploader("", type="pdf")
 
-if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_container_width=True):
+st.markdown("<br>", unsafe_allow_html=True)
+
+# --- CORREÇÃO DE DESIGN: Centralizando o Botão Principal ---
+col_vazia1, col_botao_exec, col_vazia2 = st.columns([1, 1.5, 1])
+
+with col_botao_exec:
+    btn_executar = st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_container_width=True)
+
+if btn_executar:
     if uploaded_file:
         with st.status("⚙️ Initializing Anbu Intelligence Engine...", expanded=True) as status:
             try:
@@ -117,7 +125,8 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 st.session_state.history.append({"time": time.strftime("%H:%M"), "content": response.text})
                 
                 st.write("✅ Initializing Copilot Chat...")
-                instrucao_chat = f"Atue como meu assistente de pré-vendas Robotmaster. Baseie-se nesta RFP do cliente:\n\n{pdf_text}"
+                # TUDO EM INGLÊS AGORA!
+                instrucao_chat = f"Act as my Robotmaster Pre-sales Assistant. Base your answers on this client RFP:\n\n{pdf_text}"
                 
                 # O chat agora usa a conexão guardada na memória!
                 st.session_state.chat_session = st.session_state.genai_client.chats.create(
@@ -126,7 +135,7 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 )
                 
                 st.session_state.mensagens_chat = [
-                    {"role": "assistant", "content": "Olá! O relatório foi gerado na aba ao lado. Você pode me pedir para resumir partes, criar um e-mail para o cliente ou tirar dúvidas sobre o documento original!"}
+                    {"role": "assistant", "content": "Hello! The report has been generated in the adjacent tab. You can ask me to summarize sections, draft an email to the client, or clarify any doubts about the original document!"}
                 ]
                 
                 status.update(label="Analysis Successfully Completed!", state="complete", expanded=False)
@@ -137,10 +146,10 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
     else:
         st.warning("⚠️ Please upload a PDF file first.")
 
-# Função para exportar o chat em Word (.docx)
+# Função para exportar o chat em Word (.docx) - EM INGLÊS!
 def gerar_word_chat(mensagens):
     doc = Document()
-    doc.add_heading('Histórico do Copiloto - Robotmaster', 0)
+    doc.add_heading('Copilot History - Robotmaster', 0)
     for msg in mensagens:
         autor = "Sales Engineer" if msg["role"] == "user" else "Anbu AI"
         doc.add_heading(autor, level=2)
@@ -151,7 +160,7 @@ def gerar_word_chat(mensagens):
 
 # --- 4. EXIBIÇÃO EM ABAS (RELATÓRIO E CHAT) ---
 if st.session_state.current_report:
-    st.success("✅ **Auditoria concluída com sucesso!** Navegue pelas DUAS ABAS abaixo.")
+    st.success("✅ **Audit successfully completed!** Navigate through the TWO TABS below.")
     
     aba_relatorio, aba_chat = st.tabs(["📑 1. ENGINEERING REPORT", "💬 2. AI COPILOT CHAT"])
     
@@ -177,34 +186,38 @@ if st.session_state.current_report:
 
     # === ABA 2: CHAT ===
     with aba_chat:
-        st.caption("Converse com a Anbu AI sobre a RFP ou peça para redigir e-mails comerciais.")
+        st.caption("Chat with Anbu AI about the RFP or ask it to draft commercial emails.")
         
-        # O botão de exportar chat agora gera um DOCX!
+        # CORREÇÃO DE DESIGN: Encolhendo o Botão de Exportar o Chat
         if st.session_state.mensagens_chat:
             word_chat_data = gerar_word_chat(st.session_state.mensagens_chat)
-            st.download_button(
-                label="📥 Export Chat History (.docx)",
-                data=word_chat_data,
-                file_name="Robotmaster_Chat_History.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
+            col_btn_chat, _ = st.columns([1, 2]) # Limita o botão a 1/3 da tela
+            with col_btn_chat:
+                st.download_button(
+                    label="📥 Export Chat History (.docx)",
+                    data=word_chat_data,
+                    file_name="Robotmaster_Chat_History.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
         st.divider()
         
         for msg in st.session_state.mensagens_chat:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
                 
-        if prompt := st.chat_input("Ex: Escreva um e-mail curto destacando a solução de soldagem..."):
+        # INPUT 100% INGLÊS!
+        if prompt := st.chat_input("Ex: Write a short email highlighting the welding solution..."):
             st.session_state.mensagens_chat.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
                 
             with st.chat_message("assistant"):
-                with st.spinner("Pensando..."):
+                with st.spinner("Analyzing..."):
                     try:
                         resposta_chat = st.session_state.chat_session.send_message(prompt)
                         texto_resposta = resposta_chat.text
                     except Exception as e:
-                        texto_resposta = f"⚠️ Erro de conexão com a IA: {e}. Por favor, clique no botão principal de executar análise novamente."
+                        texto_resposta = f"⚠️ AI Connection Error: {e}. Please click the main execution button to run the analysis again."
                     st.markdown(texto_resposta)
             st.session_state.mensagens_chat.append({"role": "assistant", "content": texto_resposta})
