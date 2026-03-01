@@ -1,6 +1,6 @@
 import streamlit as st
 import PyPDF2
-import google.generativeai as genai
+from google import genai
 from docx import Document
 from io import BytesIO
 import time
@@ -20,32 +20,15 @@ st.markdown("""
         line-height: 1.7;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    /* Força todas as fontes para preto */
-    .report-container, .report-container p, .report-container li {
-        color: #000000 !important; 
-    }
+    .report-container, .report-container p, .report-container li { color: #000000 !important; }
     .report-container h1, .report-container h2, .report-container h3, .report-container h4 {
-        color: #000000 !important; 
-        font-weight: 900 !important;
-        margin-top: 30px;
+        color: #000000 !important; font-weight: 900 !important; margin-top: 30px;
     }
     .report-container h2 {
-        text-transform: uppercase;
-        border-bottom: 3px solid #000000;
-        padding-bottom: 8px;
-        font-size: 22px;
-        letter-spacing: 1px;
+        text-transform: uppercase; border-bottom: 3px solid #000000; padding-bottom: 8px; font-size: 22px; letter-spacing: 1px;
     }
-    .report-container strong, .report-container b {
-        color: #000000 !important; 
-        font-weight: 800;
-    }
-    .report-header {
-        text-align: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #000000;
-    }
+    .report-container strong, .report-container b { color: #000000 !important; font-weight: 800; }
+    .report-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #000000; }
     .stButton>button { border-radius: 6px !important; }
     </style>
     """, unsafe_allow_html=True)
@@ -81,8 +64,8 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 pdf_text = "".join([page.extract_text() or "" for page in pdf_reader.pages])
                 
                 st.write("🤖 Connecting to Gemini 2.5 Flash Neural Network...")
-                genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-                modelo = genai.GenerativeModel('gemini-2.5-flash')
+                # A FORMA MODERNA DE CONECTAR!
+                client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
                 
                 st.write("📐 Mapping Kinematics & V7 Architecture...")
                 system_instruction = """
@@ -115,17 +98,23 @@ if st.button("🚀 EXECUTE ROBOTMASTER V7 ANALYSIS", type="primary", use_contain
                 TONE: Highly technical, authoritative, yet persuasive. Use precise industrial robotics terminology. DO NOT USE TABLES.
                 """
                 
-                # Gera o Relatório
-                response = modelo.generate_content(f"{system_instruction}\n\nDocument:\n{pdf_text}")
+                # Gera o Relatório (Modo Moderno)
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=f"{system_instruction}\n\nDocument:\n{pdf_text}"
+                )
+                
                 st.session_state.current_report = response.text
                 st.session_state.history.append({"time": time.strftime("%H:%M"), "content": response.text})
                 
                 st.write("✅ Initializing Copilot Chat...")
-                # Inicia a Sessão de Chat com o contexto do PDF
-                st.session_state.chat_session = modelo.start_chat(history=[
-                    {"role": "user", "parts": [f"Aqui está a RFP do cliente:\n\n{pdf_text}\n\nAtue como meu assistente de pré-vendas Robotmaster. Responda dúvidas sobre este documento e ajude-me a redigir e-mails ou propostas com base nele."]},
-                    {"role": "model", "parts": ["Entendido. O documento foi analisado. Estou pronto para atuar como seu Copiloto de Vendas. Como posso ajudar a fechar este negócio?"]}
-                ])
+                
+                # INICIANDO O CHAT DA FORMA MODERNA!
+                instrucao_chat = f"Atue como meu assistente de pré-vendas Robotmaster. Baseie-se nesta RFP do cliente:\n\n{pdf_text}"
+                st.session_state.chat_session = client.chats.create(
+                    model='gemini-2.5-flash',
+                    config={"system_instruction": instrucao_chat}
+                )
                 
                 st.session_state.mensagens_chat = [
                     {"role": "assistant", "content": "Olá! O relatório foi gerado na aba ao lado. Você pode me pedir para resumir partes, criar um e-mail para o cliente ou tirar dúvidas sobre o documento original!"}
@@ -169,7 +158,6 @@ if st.session_state.current_report:
     with aba_chat:
         st.caption("Converse com a Anbu AI sobre a RFP ou peça para redigir e-mails comerciais.")
         
-        # Opcional: Botão para exportar histórico do chat
         if st.session_state.mensagens_chat:
             texto_chat = "--- HISTÓRICO DO COPILOTO (ROBOTMASTER) ---\n\n"
             for msg in st.session_state.mensagens_chat:
@@ -184,12 +172,10 @@ if st.session_state.current_report:
             )
         st.divider()
         
-        # Exibe mensagens anteriores
         for msg in st.session_state.mensagens_chat:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
                 
-        # Input do Chat
         if prompt := st.chat_input("Ex: Escreva um e-mail de 3 linhas agradecendo o envio da RFP e destacando a solução de solda..."):
             st.session_state.mensagens_chat.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
